@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Dashboard</h2>
+        <a href="dashboard.html">Overview</a>
+        <a href="home.html">Home</a>
+        <a href="domain.html">Domains</a>
+        <a href="result.html">Jobs</a>
+    </div>
+
+    <div class="main">
+        <h1>All Jobs</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Company</th>
+                    <th>Domain</th>
+                    <th>Background</th>
+                    <th>Location</th>
+                    <th>Salary</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="jobTable"></tbody>
+        </table>
+
+        <h2>Jobs by Domain</h2>
+        <canvas id="jobsChart" style="height:300px;"></canvas>
+    </div>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
