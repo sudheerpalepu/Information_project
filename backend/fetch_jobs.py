@@ -9,15 +9,8 @@ from backend.models import Job
 router = APIRouter()
 
 JOOBLE_API = "b44b7aca-074a-4425-819d-32a3add455d5"
-ADZUNA_APP_ID = "db6dc542"
-ADZUNA_API_KEY = "55a0e032e19564961dedb66c1b5a6f73"
-
-DOMAIN_MAP = {
-    "Computer Science": ["Data Science", "AIML", "Web Development", "Cybersecurity"],
-    "Mechanical": ["Automobile", "Design", "Manufacturing"],
-    "Finance": ["Accounting", "Investment Banking"],
-    "Marketing": ["Digital Marketing", "Brand Management"]
-}
+ADZUNA_APP_ID = "95dde1df"
+ADZUNA_API_KEY = "d85b9828304c987397ea29b5ff4156ca"
 
 def fetch_single(domain, background, db: Session):
     domain = domain.strip()
@@ -37,7 +30,6 @@ def fetch_single(domain, background, db: Session):
         for job in res.get("jobs", []):
             title = (job.get("title") or "").lower()
 
-            # ✅ FIX: STRICT FILTER
             if domain.lower() not in title:
                 continue
 
@@ -50,7 +42,7 @@ def fetch_single(domain, background, db: Session):
     except Exception as e:
         print("Jooble error:", e)
 
-    # -------- ADZUNA MULTI COUNTRY + PAGINATION --------
+    # -------- ADZUNA --------
     for country in ["us", "gb", "in"]:
         for page in range(1, 4):
             try:
@@ -61,7 +53,6 @@ def fetch_single(domain, background, db: Session):
                 for job in res.get("results", []):
                     title = (job.get("title") or "").lower()
 
-                    # ✅ FIX: STRICT FILTER
                     if domain.lower() not in title:
                         continue
 
@@ -82,7 +73,12 @@ def fetch_single(domain, background, db: Session):
                 print("Adzuna error:", e)
 
     # -------- INSERT --------
-    count = 0
+    db.query(Job).filter(
+        Job.domain == domain,
+        Job.background == background
+    ).delete()
+    db.commit()
+
     for j in jobs_to_insert:
         db.add(Job(
             title=j["title"],
@@ -94,22 +90,21 @@ def fetch_single(domain, background, db: Session):
             source="api",
             posted_at=datetime.utcnow()
         ))
-        count += 1
 
     db.commit()
 
-    print(f"✅ Inserted {count} jobs for {domain}")
+    print(f"✅ Inserted {len(jobs_to_insert)} jobs for {domain}")
 
 
-@router.post("/fetch-all")
-def fetch_all(db: Session = Depends(get_db)):
+# ✅ NEW API (IMPORTANT)
+@router.post("/fetch-domain")
+def fetch_domain(payload: dict, db: Session = Depends(get_db)):
+    domain = payload.get("domain")
+    background = payload.get("background")
 
-    # CLEAR OLD DATA
-    db.query(Job).delete()
-    db.commit()
+    if not domain or not background:
+        return {"error": "Domain and background required"}
 
-    for bg, domains in DOMAIN_MAP.items():
-        for d in domains:
-            fetch_single(d, bg, db)
+    fetch_single(domain, background, db)
 
-    return {"message": "All jobs inserted successfully"}
+    return {"message": f"{domain} jobs fetched successfully"}

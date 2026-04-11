@@ -11,6 +11,15 @@ let editId = null;
 
 // ---------------- LOAD ----------------
 async function loadJobs() {
+
+    // ✅ STEP 1: FETCH ONLY SELECTED DOMAIN
+    await fetch(`${API}/fetch-domain`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ domain, background })
+    });
+
+    // ✅ STEP 2: GET DATA FROM DB
     const res = await fetch(`${API}/predict`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
@@ -24,7 +33,7 @@ async function loadJobs() {
     renderCompanyChart(data.top_companies);
     renderLocationChart(data.jobs);
     renderSalaryChart(data.jobs);
-    renderDomainScopeChart(data.jobs); // NEW
+    renderDomainScopeChart(data.jobs);
 }
 
 // ---------------- SUMMARY ----------------

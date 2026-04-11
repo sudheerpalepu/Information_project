@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from backend.db import Base, engine, get_db, SessionLocal
+from backend.db import Base, engine, get_db
 from backend.models import Job
-from backend.fetch_jobs import router as fetch_jobs_router, fetch_all
+from backend.fetch_jobs import router as fetch_jobs_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -20,12 +20,8 @@ app.add_middleware(
 
 app.include_router(fetch_jobs_router)
 
-# AUTO FETCH
-@app.on_event("startup")
-def startup():
-    db = SessionLocal()
-    fetch_all(db)
-    db.close()
+# ❌ REMOVED STARTUP AUTO FETCH (IMPORTANT)
+
 
 # -------- REQUEST MODELS --------
 class PredictRequest(BaseModel):
@@ -39,6 +35,7 @@ class JobCreate(BaseModel):
     salary: float
     domain: str
     background: str
+
 
 # -------- PREDICT --------
 @app.post("/predict")
@@ -78,6 +75,7 @@ def predict(payload: PredictRequest, db: Session = Depends(get_db)):
         "salaries": salaries
     }
 
+
 # -------- ADD JOB --------
 @app.post("/add-job")
 def add_job(job: JobCreate, db: Session = Depends(get_db)):
@@ -85,6 +83,7 @@ def add_job(job: JobCreate, db: Session = Depends(get_db)):
     db.add(new_job)
     db.commit()
     return {"message": "Job added"}
+
 
 # -------- DELETE JOB --------
 @app.delete("/delete-job/{job_id}")
@@ -96,9 +95,9 @@ def delete_job(job_id: int, db: Session = Depends(get_db)):
     db.delete(job)
     db.commit()
     return {"message": "Deleted"}
-from fastapi import HTTPException
 
-# 🔐 Hardcoded user (you can change)
+
+# -------- LOGIN --------
 USER_DATA = {
     "username": "sudheer",
     "password": "1234"
