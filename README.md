@@ -142,3 +142,17 @@ Here’s a bullet-style mapping of commits to files and references:
 
 - **Cleanup**
   - `Remove old JS and CSS files after restructuring the folders for safe and clean` → Project refactoring  
+**Execution Flow**
+User logs in with credentials
+Selects background (e.g., Computer Science)
+Selects domain (e.g., Data Science)
+System fetches job data from APIs
+Data is stored in PostgreSQL
+Dashboard displays:
+Job listings
+Analytics charts
+Salary distribution
+Company trends
+**Backend Base URL**:http://54.211.124.103:8000
+**Frontend**:http://54.211.124.103/
+http://54.211.124.103:8000/docs
