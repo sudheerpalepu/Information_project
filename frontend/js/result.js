@@ -1,5 +1,4 @@
-const API = "http://127.0.0.1:8000";
-
+const API = "/api";
 const domain = localStorage.getItem("domain") || "Data Science";
 const background = localStorage.getItem("background") || "Computer Science";
 

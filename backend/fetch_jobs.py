@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-import requests
-import random
+import requests, random
 from datetime import datetime
 from backend.db import get_db
 from backend.models import Job
@@ -13,19 +12,12 @@ ADZUNA_APP_ID = "95dde1df"
 ADZUNA_API_KEY = "d85b9828304c987397ea29b5ff4156ca"
 
 def fetch_single(domain, background, db: Session):
-    domain = domain.strip()
-    background = background.strip()
 
     jobs_to_insert = []
 
-    print(f"🔍 Fetching {domain}")
-
-    # -------- JOOBLE --------
     try:
         url = f"https://jooble.org/api/{JOOBLE_API}"
-        payload = {"keywords": domain, "location": ""}
-
-        res = requests.post(url, json=payload).json()
+        res = requests.post(url, json={"keywords": domain}).json()
 
         for job in res.get("jobs", []):
             title = (job.get("title") or "").lower()
@@ -39,16 +31,21 @@ def fetch_single(domain, background, db: Session):
                 "location": job.get("location") or "Remote",
                 "salary": round(random.uniform(3, 12), 2)
             })
-    except Exception as e:
-        print("Jooble error:", e)
+    except:
+        pass
 
-    # -------- ADZUNA --------
     for country in ["us", "gb", "in"]:
-        for page in range(1, 4):
+        for page in range(1, 2):
             try:
-                url = f"https://api.adzuna.com/v1/api/jobs/{country}/search/{page}?app_id={ADZUNA_APP_ID}&app_key={ADZUNA_API_KEY}&results_per_page=50&what={domain}"
+                url = f"https://api.adzuna.com/v1/api/jobs/{country}/search/{page}"
+                params = {
+                    "app_id": ADZUNA_APP_ID,
+                    "app_key": ADZUNA_API_KEY,
+                    "what": domain,
+                    "results_per_page": 20
+                }
 
-                res = requests.get(url).json()
+                res = requests.get(url, params=params).json()
 
                 for job in res.get("results", []):
                     title = (job.get("title") or "").lower()
@@ -57,26 +54,18 @@ def fetch_single(domain, background, db: Session):
                         continue
 
                     salary = job.get("salary_min")
-
-                    if salary:
-                        salary = round(salary / 100000, 2)
-                    else:
-                        salary = round(random.uniform(3, 15), 2)
+                    salary = round(salary / 100000, 2) if salary else round(random.uniform(3, 10), 2)
 
                     jobs_to_insert.append({
                         "title": job.get("title"),
                         "company": job.get("company", {}).get("display_name", "Unknown"),
-                        "location": job.get("location", {}).get("display_name") or "Remote",
+                        "location": job.get("location", {}).get("display_name", "Remote"),
                         "salary": salary
                     })
-            except Exception as e:
-                print("Adzuna error:", e)
+            except:
+                pass
 
-    # -------- INSERT --------
-    db.query(Job).filter(
-        Job.domain == domain,
-        Job.background == background
-    ).delete()
+    db.query(Job).filter(Job.domain == domain, Job.background == background).delete()
     db.commit()
 
     for j in jobs_to_insert:
@@ -93,18 +82,8 @@ def fetch_single(domain, background, db: Session):
 
     db.commit()
 
-    print(f"✅ Inserted {len(jobs_to_insert)} jobs for {domain}")
 
-
-# ✅ NEW API (IMPORTANT)
 @router.post("/fetch-domain")
 def fetch_domain(payload: dict, db: Session = Depends(get_db)):
-    domain = payload.get("domain")
-    background = payload.get("background")
-
-    if not domain or not background:
-        return {"error": "Domain and background required"}
-
-    fetch_single(domain, background, db)
-
-    return {"message": f"{domain} jobs fetched successfully"}
+    fetch_single(payload["domain"], payload["background"], db)
+    return {"message": "fetched"}

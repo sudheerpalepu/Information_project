@@ -1,5 +1,4 @@
-const API = "http://127.0.0.1:8000";
-
+const API = "/api";
 async function login() {
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
