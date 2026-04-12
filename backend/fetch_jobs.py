@@ -1,20 +1,31 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 import requests, random
 from datetime import datetime
 from backend.db import get_db
 from backend.models import Job
+from pydantic import BaseModel
+
+class FetchDomainRequest(BaseModel):
+    domain: str
+    background: str
 
 router = APIRouter()
 
-JOOBLE_API = "b44b7aca-074a-4425-819d-32a3add455d5"
-ADZUNA_APP_ID = "95dde1df"
-ADZUNA_API_KEY = "d85b9828304c987397ea29b5ff4156ca"
+JOOBLE_API = "7c3d4eae-538c-48a7-af32-b57f3a3ad6d6"
+ADZUNA_APP_ID = "db6dc542"
+ADZUNA_API_KEY = "55a0e032e19564961dedb66c1b5a6f73"
 
 def fetch_single(domain, background, db: Session):
 
+    if not domain or not background:
+        raise HTTPException(status_code=400, detail="Domain and background required")
+
     jobs_to_insert = []
 
+    # -------- JOOBLE --------
     try:
         url = f"https://jooble.org/api/{JOOBLE_API}"
         res = requests.post(url, json={"keywords": domain}).json()
@@ -31,9 +42,10 @@ def fetch_single(domain, background, db: Session):
                 "location": job.get("location") or "Remote",
                 "salary": round(random.uniform(3, 12), 2)
             })
-    except:
-        pass
+    except Exception as e:
+        print("Jooble error:", e)
 
+    # -------- ADZUNA --------
     for country in ["us", "gb", "in"]:
         for page in range(1, 2):
             try:
@@ -50,6 +62,7 @@ def fetch_single(domain, background, db: Session):
                 for job in res.get("results", []):
                     title = (job.get("title") or "").lower()
 
+                    # ✅ FIXED CONDITION
                     if domain.lower() not in title:
                         continue
 
@@ -62,12 +75,17 @@ def fetch_single(domain, background, db: Session):
                         "location": job.get("location", {}).get("display_name", "Remote"),
                         "salary": salary
                     })
-            except:
-                pass
+            except Exception as e:
+                print("Adzuna error:", e)
 
-    db.query(Job).filter(Job.domain == domain, Job.background == background).delete()
+    # -------- CLEAN OLD DATA --------
+    db.query(Job).filter(
+        Job.domain == domain,
+        Job.background == background
+    ).delete()
     db.commit()
 
+    # -------- INSERT --------
     for j in jobs_to_insert:
         db.add(Job(
             title=j["title"],
@@ -84,6 +102,6 @@ def fetch_single(domain, background, db: Session):
 
 
 @router.post("/fetch-domain")
-def fetch_domain(payload: dict, db: Session = Depends(get_db)):
-    fetch_single(payload["domain"], payload["background"], db)
-    return {"message": "fetched"}
+def fetch_domain(payload: FetchDomainRequest, db: Session = Depends(get_db)):
+    fetch_single(payload.domain, payload.background, db)
+    return {"message": "fetched successfully"}
