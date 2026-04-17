@@ -47,7 +47,8 @@ POST /add-job
 → Add new job manually
 DELETE /delete-job/{id}
 → Delete job
-
+edit job
+edit-job{id}
 # execution
 the user can log on using the credentials and then he will navigate to the
 homepage there backgrounds willbe there like:
@@ -122,7 +123,7 @@ Here’s a bullet-style mapping of commits to files and references:
   - `Add dashboard.html for page layout and better UI (reference: W3Schools)` → W3Schools HTML/CSS tutorials  
   - `Add result.js to handle job results page logic by fastapi and documentation of fast api` → FastAPI docs  
   - `Add login.js to handle login form validation and authentication by js tutorials from w3schools` → W3Schools JS tutorials  
-  - `Add home.js to manage home page interactions using the w3schools` → W3Schools JS tutorials  
+  - 'Add home.js to manage home page interactions using the w3schools` → W3Schools JS tutorials  
   - `Add domain.js to manage domain page interactions by javascript tutorials` → JS tutorials  
   - `Add dashboard.js to handle dashboard page functionality by w3 schools` → W3Schools JS tutorials  
 
@@ -153,6 +154,7 @@ Job listings
 Analytics charts
 Salary distribution
 Company trends
-**Backend Base URL**:http://54.211.124.103:8000
-**Frontend**:http://54.211.124.103/
+curd functions
+**Backend Base URL**:http://54.211.124.103:8000/docs
+**Frontend**:http://54.211.124.103:8000/static/home.html
 http://54.211.124.103:8000/docs
